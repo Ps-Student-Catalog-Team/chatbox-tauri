@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)" />
+    <title>ChatBox - 聊天室</title>
+    <style>
+      /* Prevent flash of unstyled content */
+      html { visibility: visible; opacity: 1; }
+      /* Prevent text size adjustment on orientation change */
+      html { -webkit-text-size-adjust: 100%; }
+      /* Smooth font rendering */
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior: none;
+        overflow: hidden;
+      }
+      /* iOS safe area */
+      .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .safe-area-top { padding-top: env(safe-area-inset-top, 0px); }
+      /* Prevent pull-to-refresh */
+      body { overscroll-behavior-y: none; touch-action: manipulation; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
