@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"enables the default permissions","local":true,"windows":["main"],"permissions":["core:default"]}}
+{"default":{"identifier":"default","description":"Default permissions for ChatBox on all platforms","local":true,"windows":["main"],"permissions":["core:default","shell:allow-open"]}}
