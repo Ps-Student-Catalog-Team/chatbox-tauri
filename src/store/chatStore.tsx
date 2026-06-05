@@ -182,7 +182,7 @@ interface ChatContextType {
   logout: () => void;
   addFriend: (friendUsername: string) => void;
   deleteFriend: (friendUsername: string) => void;
-  createGroup: (members: string[]) => void;
+  createGroup: (groupName: string, members: string[]) => void;
   loadMessages: (targetType: TargetType, targetId: string) => Promise<void>;
   switchChat: (type: TargetType, id: string, name: string) => void;
   renameGroup: (groupId: number, newName: string) => void;
@@ -209,6 +209,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const unsub = wsService.onMessage((msg: WSMessage) => {
       switch (msg.type) {
         case 'auth_ok':
+          localStorage.setItem('chatbox_token', msg.token!);
           dispatch({
             type: 'LOGIN',
             username: msg.username!,
@@ -247,6 +248,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case 'withdraw':
+        case 'withdraw_message':
           if (msg.message_id && msg.target_type && msg.target_id) {
             dispatch({
               type: 'WITHDRAW_MESSAGE',
@@ -262,7 +264,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case 'add_friend_ok': {
-          // Will be handled by sync_data
+          wsService.send({ action: 'sync' });
+          break;
+        }
+
+        case 'add_member_ok': {
+          alert(`成功添加 ${msg.added || 0} 位成员`);
           wsService.send({ action: 'sync' });
           break;
         }
@@ -303,10 +310,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         case 'disband_group_err':
         case 'quit_group_err':
         case 'publish_announcement_err':
+        case 'withdraw_message_err':
           alert(msg.content || '操作失败');
           break;
 
         case 'publish_announcement_ok':
+          alert('公告已发布');
           break;
 
         case 'delete_friend_ok':
@@ -314,6 +323,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case 'update_avatar_ok':
+        case 'avatar_ok':
           wsService.send({ action: 'sync' });
           break;
       }
@@ -363,17 +373,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addFriend = useCallback((friendUsername: string) => {
-    wsService.send({ action: 'add_friend', friend_username: friendUsername });
+    wsService.send({ action: 'add_friend', target_user: friendUsername });
   }, []);
 
   const deleteFriend = useCallback((friendUsername: string) => {
     if (confirm(`确定要删除好友 ${friendUsername} 吗？`)) {
-      wsService.send({ action: 'delete_friend', friend_username: friendUsername });
+      wsService.send({ action: 'delete_friend', target_user: friendUsername });
     }
   }, []);
 
-  const createGroup = useCallback((members: string[]) => {
-    wsService.send({ action: 'create_group', members });
+  const createGroup = useCallback((groupName: string, members: string[]) => {
+    wsService.send({ action: 'create_group', group_name: groupName, members });
   }, []);
 
   const loadMessages = useCallback(async (targetType: TargetType, targetId: string) => {
@@ -422,7 +432,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateAvatar = useCallback((avatarUrl: string) => {
-    wsService.send({ action: 'update_avatar', avatar_url: avatarUrl });
+    wsService.send({ action: 'update_avatar', content: avatarUrl });
   }, []);
 
   const value: ChatContextType = {

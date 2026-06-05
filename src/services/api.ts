@@ -3,11 +3,15 @@ import type { Message, UserProfile, GroupMember, ServerConfig, TargetType } from
 const DEFAULT_CONFIG: ServerConfig = {
   host: '127.0.0.1',
   port: 40001,
-  wsUrl: 'ws://127.0.0.1:40001/ws',
-  httpUrl: 'http://127.0.0.1:40001',
+  wsUrl: '/ws',
+  httpUrl: '',
 };
 
 let config: ServerConfig = { ...DEFAULT_CONFIG };
+
+function isTauri(): boolean {
+  return !!(window as any).__TAURI__;
+}
 
 export function setServerConfig(newConfig: Partial<ServerConfig>) {
   config = { ...config, ...newConfig };
@@ -22,8 +26,12 @@ export function getServerConfig(): ServerConfig {
   const saved = localStorage.getItem('server_config');
   if (saved) {
     try {
-      config = { ...config, ...JSON.parse(saved) };
+      const savedConfig = JSON.parse(saved);
+      config = { ...config, ...savedConfig };
     } catch { /* ignore */ }
+  }
+  if (!isTauri()) {
+    return { ...config, wsUrl: '/ws', httpUrl: '' };
   }
   return config;
 }
@@ -82,9 +90,9 @@ export async function resetPassword(username: string, newPassword: string): Prom
 }
 
 // ============ 消息 API ============
-export async function getMessages(targetType: TargetType, targetId: string): Promise<Message[]> {
+export async function getMessages(targetType: TargetType, targetId: string, limit = 100): Promise<Message[]> {
   const res = await fetch(
-    `${config.httpUrl}/api/messages?target_type=${targetType}&target_id=${encodeURIComponent(targetId)}`,
+    `${config.httpUrl}/api/messages?type=${targetType}&id=${encodeURIComponent(targetId)}&limit=${limit}`,
     { headers: getAuthHeaders() }
   );
   const data = await res.json();
@@ -101,7 +109,7 @@ export async function getGroupMembers(groupId: number): Promise<GroupMember[]> {
 }
 
 // ============ 在线用户 API ============
-export async function getOnlineUsers(): Promise<{ count: number }> {
+export async function getOnlineUsers(): Promise<{ online_count: number }> {
   const res = await fetch(`${config.httpUrl}/api/online-users`, {
     headers: getAuthHeaders(),
   });
@@ -132,13 +140,18 @@ export async function adminDeleteMessage(secret: string, messageId: number): Pro
   const res = await fetch(`${config.httpUrl}/api/admin/delete-message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ secret, message_id: messageId }),
+    body: JSON.stringify({ secret, id: messageId }),
   });
   return res.json();
 }
 
 export async function adminToggleMute(secret: string): Promise<any> {
   const res = await fetch(`${config.httpUrl}/api/admin/toggle-mute?secret=${secret}`);
+  return res.json();
+}
+
+export async function adminGetStatus(secret: string): Promise<{ global_mute: boolean }> {
+  const res = await fetch(`${config.httpUrl}/api/admin/status?secret=${secret}`);
   return res.json();
 }
 

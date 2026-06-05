@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { getServerConfig, setServerConfig } from '../services/api';
 import { wsService } from '../services/websocket';
 

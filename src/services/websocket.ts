@@ -83,14 +83,14 @@ class WebSocketService {
     }
   }
 
-  onMessage(handler: MessageHandler) {
+  onMessage(handler: MessageHandler): () => void {
     this.messageHandlers.add(handler);
-    return () => this.messageHandlers.delete(handler);
+    return () => { this.messageHandlers.delete(handler); };
   }
 
-  onStatusChange(handler: StatusHandler) {
+  onStatusChange(handler: StatusHandler): () => void {
     this.statusHandlers.add(handler);
-    return () => this.statusHandlers.delete(handler);
+    return () => { this.statusHandlers.delete(handler); };
   }
 
   private notifyStatus(connected: boolean) {

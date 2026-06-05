@@ -4,7 +4,7 @@ import { getUserInfo, uploadAvatar, updateUserProfile, uploadBackground, resetPa
 import type { UserProfile as UserProfileType } from '../types';
 
 export default function UserProfile({ onBack }: { onBack: () => void }) {
-  const { state, dispatch } = useChat();
+  const { state, dispatch, updateAvatar } = useChat();
   const [profile, setProfile] = useState<UserProfileType | null>(null);
   const [signature, setSignature] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -22,13 +22,24 @@ export default function UserProfile({ onBack }: { onBack: () => void }) {
     if (!file) return;
     setLoading(true);
     try {
-      await uploadAvatar(file);
-      setProfile((prev) => prev ? { ...prev, avatar_url: URL.createObjectURL(file) } : null);
+      const result = await uploadAvatar(file);
+      console.log('avatar upload response:', result);
+      const avatarUrl = result.avatar_url || result.url || '';
+      if (avatarUrl) {
+        setProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : null);
+        dispatch({ type: 'UPDATE_AVATAR', avatarUrl });
+        updateAvatar(avatarUrl);
+      } else {
+        setProfile((prev) => prev ? { ...prev, avatar_url: URL.createObjectURL(file) } : null);
+      }
       alert('头像上传成功');
-    } catch {
-      alert('上传失败');
+    } catch (err) {
+      console.error('avatar upload failed:', err);
+      alert('上传失败: ' + (err instanceof Error ? err.message : '请检查网络和后端服务'));
     }
     setLoading(false);
+    // reset input so same file can be re-selected
+    e.target.value = '';
   };
 
   const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,10 +49,12 @@ export default function UserProfile({ onBack }: { onBack: () => void }) {
     try {
       await uploadBackground(file);
       alert('背景图上传成功');
-    } catch {
-      alert('上传失败');
+    } catch (err) {
+      console.error('background upload failed:', err);
+      alert('上传失败: ' + (err instanceof Error ? err.message : '请检查网络和后端服务'));
     }
     setLoading(false);
+    e.target.value = '';
   };
 
   const handleUpdateSignature = async () => {

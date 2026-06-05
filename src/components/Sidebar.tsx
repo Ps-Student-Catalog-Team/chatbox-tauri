@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useChat } from '../store/chatStore';
-import type { TargetType, ChatSession } from '../types';
+import type { ChatSession } from '../types';
 import ServerSettings from './ServerSettings';
 import UserProfile from './UserProfile';
 import ThemeToggle from './ThemeToggle';
@@ -174,7 +174,7 @@ function ChatList({ sessions, activeChatId, activeChatType, onSelect }: {
   activeChatType: string;
   onSelect: (session: ChatSession) => void;
 }) {
-  const iconMap: Record<string, JSX.Element> = {
+  const iconMap: Record<string, React.JSX.Element> = {
     public: (
       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center flex-shrink-0">
         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -316,6 +316,7 @@ function GroupList({ onChat }: { onChat: (id: number, name: string) => void }) {
 function AddSection() {
   const { addFriend, createGroup, switchChat } = useChat();
   const [friendName, setFriendName] = useState('');
+  const [groupName, setGroupName] = useState('');
   const [groupMembers, setGroupMembers] = useState('');
   const [groupId, setGroupId] = useState('');
 
@@ -347,17 +348,25 @@ function AddSection() {
         <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
           创建群聊
         </h3>
+        <input
+          type="text"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          placeholder="输入群聊名称"
+          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400"
+        />
         <textarea
           value={groupMembers}
           onChange={(e) => setGroupMembers(e.target.value)}
           placeholder="输入成员用户名，用逗号分隔（至少3人）"
           rows={3}
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+          className="w-full mt-2 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 resize-none"
         />
         <button
           onClick={() => {
             const members = groupMembers.split(',').map((m) => m.trim()).filter(Boolean);
-            if (members.length >= 3) { createGroup(members); setGroupMembers(''); }
+            if (groupName && members.length >= 3) { createGroup(groupName, members); setGroupName(''); setGroupMembers(''); }
+            else if (!groupName) alert('请输入群聊名称');
             else alert('至少需要3位成员（用逗号分隔）');
           }}
           className="mt-2 w-full py-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white text-sm font-medium transition-colors"
